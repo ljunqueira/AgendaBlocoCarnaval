@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Parade = {
@@ -382,9 +383,10 @@ const ProgramacaoPage = () => {
 
         <div className="grid gap-4">
           {parades.map((parade) => (
-            <article
+            <Link
               key={parade.id}
-              className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5"
+              href={`/desfile/${parade.id}`}
+              className="block rounded-2xl border border-slate-800 bg-slate-900/60 p-5 transition hover:border-slate-600"
             >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -406,7 +408,7 @@ const ProgramacaoPage = () => {
               {parade.location && (
                 <p className="mt-2 text-sm text-slate-400">{parade.location}</p>
               )}
-            </article>
+            </Link>
           ))}
         </div>
 
