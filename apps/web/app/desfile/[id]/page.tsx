@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useAgendaStore } from "../../store/agenda-store";
 
 type ParadeDetail = {
   id: number | string;
@@ -38,8 +39,6 @@ type ParadeDetail = {
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
-const STORAGE_KEY = "agenda.parades";
-
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
   { ssr: false }
@@ -71,38 +70,16 @@ const formatDateRange = (start?: string | null, end?: string | null) => {
   return formattedStart ?? formattedEnd ?? "Horário a confirmar";
 };
 
-const readAgenda = () => {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(String);
-  } catch (error) {
-    console.warn("Falha ao ler agenda local.", error);
-    return [];
-  }
-};
-
-const writeAgenda = (items: string[]) => {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-};
-
 const DesfileDetalhePage = () => {
   const params = useParams<{ id: string }>();
   const paradeId = params?.id ? String(params.id) : null;
   const [parade, setParade] = useState<ParadeDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isInAgenda, setIsInAgenda] = useState(false);
-
-  useEffect(() => {
-    if (!paradeId) return;
-    const agenda = readAgenda();
-    setIsInAgenda(agenda.includes(String(paradeId)));
-  }, [paradeId]);
+  const paradeIds = useAgendaStore((state) => state.paradeIds);
+  const addParade = useAgendaStore((state) => state.addParade);
+  const removeParade = useAgendaStore((state) => state.removeParade);
+  const isInAgenda = paradeId ? paradeIds.includes(paradeId) : false;
 
   useEffect(() => {
     import("leaflet").then((L) => {
@@ -180,17 +157,11 @@ const DesfileDetalhePage = () => {
 
   const handleToggleAgenda = () => {
     if (!paradeId) return;
-    const current = readAgenda();
-    const idValue = String(paradeId);
-    if (current.includes(idValue)) {
-      const next = current.filter((item) => item !== idValue);
-      writeAgenda(next);
-      setIsInAgenda(false);
+    if (isInAgenda) {
+      removeParade(paradeId);
       return;
     }
-    const next = [...current, idValue];
-    writeAgenda(next);
-    setIsInAgenda(true);
+    addParade(paradeId);
   };
 
   return (
