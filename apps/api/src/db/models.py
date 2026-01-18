@@ -65,6 +65,7 @@ class Parade(Base):
     end_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     latitude: Mapped[float | None] = mapped_column(Float)
     longitude: Mapped[float | None] = mapped_column(Float)
+    foundation_year: Mapped[int | None] = mapped_column(Integer)
     neighborhood_id: Mapped[int | None] = mapped_column(
         ForeignKey("neighborhoods.id", ondelete="SET NULL")
     )
